@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Point — AI at your cursor, for Mac</title>
+<meta name="description" content="The mouse cursor hasn't evolved since 1984. Point is an AI-powered cursor that understands, translates, saves and researches anything on your Mac screen. Move less. Do more.">
+<meta name="theme-color" content="#08080A">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://pointai.dev/">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/app-icon.svg">
+<link rel="mask-icon" href="/favicon.svg" color="#0B0B0C">
+
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://pointai.dev/">
+<meta property="og:site_name" content="Point">
+<meta property="og:title" content="Point — AI at your cursor, for Mac">
+<meta property="og:description" content="The mouse cursor hasn't evolved since 1984. An AI-powered cursor that understands, translates, saves and researches anything on screen. Move less. Do more.">
+<meta property="og:image" content="https://pointai.dev/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Point — AI at your cursor, for Mac">
+<meta name="twitter:description" content="The mouse cursor hasn't evolved since 1984. Move less. Do more.">
+<meta name="twitter:image" content="https://pointai.dev/og-image.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Point",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "macOS",
+  "url": "https://pointai.dev/",
+  "description": "An AI-powered cursor for macOS that understands, translates, saves and researches anything on screen."
+}
+</script>
+
+<style>
+:root{
+  --ink:#08080A;
+  --ink-2:#0B0B0C;
+  --paper:#FFFFFF;
+  --blue:#5B8CFF;
+  --violet:#A78BFA;
+  --text:#F4F4F6;
+  --muted:#9A9BA6;
+  --faint:#6A6B76;
+  --line:rgba(255,255,255,.09);
+  --glass:rgba(255,255,255,.045);
+  --radius:16px;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Inter,system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:17px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+
+/* ---------- ambient background ---------- */
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg::before,.bg::after{content:"";position:absolute;border-radius:50%;filter:blur(120px)}
+.bg::before{
+  width:min(90vw,900px);aspect-ratio:1;top:-32vh;left:50%;transform:translateX(-62%);
+  background:radial-gradient(circle,rgba(91,140,255,.24),transparent 66%);
+}
+.bg::after{
+  width:min(80vw,760px);aspect-ratio:1;top:34vh;right:-18vw;
+  background:radial-gradient(circle,rgba(167,139,250,.17),transparent 66%);
+}
+.grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:72px 72px;
+  opacity:.32;
+  mask-image:radial-gradient(ellipse 80% 55% at 50% 22%,#000 20%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 55% at 50% 22%,#000 20%,transparent 78%);
+}
+
+.wrap{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ---------- nav ---------- */
+header{padding:26px 0 0}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text)}
+.brand svg{width:15px;height:auto;display:block}
+.brand span{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.nav-note{
+  font-size:12.5px;color:var(--muted);letter-spacing:.02em;
+  display:flex;align-items:center;gap:8px;
+  border:1px solid var(--line);background:var(--glass);
+  padding:6px 12px;border-radius:999px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--blue);box-shadow:0 0 0 0 rgba(91,140,255,.6);animation:pulse 2.6s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(91,140,255,.55)}70%{box-shadow:0 0 0 7px rgba(91,140,255,0)}100%{box-shadow:0 0 0 0 rgba(91,140,255,0)}}
+
+/* ---------- hero ---------- */
+.hero{padding:clamp(56px,11vh,104px) 0 0;text-align:center}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:12.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);
+  border:1px solid var(--line);background:var(--glass);
+  padding:7px 15px;border-radius:999px;margin:0 0 30px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.eyebrow svg{width:11px;height:auto;opacity:.85}
+
+h1{
+  margin:0 0 26px;
+  font-size:clamp(46px,9.2vw,92px);
+  line-height:.98;
+  letter-spacing:-.045em;
+  font-weight:640;
+}
+h1 .grad{
+  background:linear-gradient(100deg,var(--blue) 8%,var(--violet) 92%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
+.lede{
+  margin:0 auto;max-width:640px;
+  font-size:clamp(16.5px,2.1vw,19.5px);
+  line-height:1.62;color:var(--muted);
+  letter-spacing:-.01em;
+}
+.lede b{color:var(--text);font-weight:560}
+
+/* ---------- form ---------- */
+.form-block{margin:38px auto 0;max-width:472px}
+form{display:flex;gap:9px;align-items:stretch}
+.field{position:relative;flex:1}
+input[type=email]{
+  width:100%;height:52px;
+  padding:0 16px;
+  font-family:var(--font);font-size:16px;color:var(--text);
+  background:rgba(255,255,255,.05);
+  border:1px solid var(--line);
+  border-radius:13px;
+  outline:none;
+  transition:border-color .18s ease,background .18s ease,box-shadow .18s ease;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+input[type=email]::placeholder{color:var(--faint)}
+input[type=email]:focus{
+  border-color:rgba(91,140,255,.6);
+  background:rgba(255,255,255,.07);
+  box-shadow:0 0 0 4px rgba(91,140,255,.13);
+}
+input[type=email]:disabled{opacity:.55}
+button{
+  height:52px;padding:0 22px;
+  font-family:var(--font);font-size:15.5px;font-weight:600;letter-spacing:-.01em;
+  color:#0A0A0C;
+  background:linear-gradient(100deg,var(--blue),var(--violet));
+  border:0;border-radius:13px;cursor:pointer;white-space:nowrap;
+  transition:transform .16s cubic-bezier(.2,.8,.3,1),box-shadow .16s ease,opacity .16s ease;
+  box-shadow:0 6px 24px -8px rgba(91,140,255,.6);
+}
+button:hover{transform:translateY(-1px);box-shadow:0 10px 30px -8px rgba(91,140,255,.75)}
+button:active{transform:translateY(0)}
+button:disabled{cursor:default;opacity:.6;transform:none}
+.msg{
+  min-height:22px;margin:13px 2px 0;
+  font-size:13.5px;line-height:1.45;color:var(--faint);
+  transition:color .2s ease;
+}
+.msg.ok{color:#7FE0B0}
+.msg.err{color:#FF8F8F}
+.msg a{color:inherit}
+
+/* ---------- demo window ---------- */
+.demo{
+  position:relative;
+  margin:clamp(56px,9vh,88px) auto 0;
+  max-width:880px;
+  border:1px solid var(--line);
+  border-radius:20px;
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.018));
+  box-shadow:0 40px 90px -40px rgba(0,0,0,.9),0 0 0 1px rgba(255,255,255,.03) inset;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  overflow:hidden;
+}
+.titlebar{
+  display:flex;align-items:center;gap:8px;
+  padding:13px 16px;
+  border-bottom:1px solid var(--line);
+  background:rgba(255,255,255,.022);
+}
+.tl{width:11px;height:11px;border-radius:50%;background:rgba(255,255,255,.15)}
+.tl:nth-child(1){background:rgba(255,95,86,.75)}
+.tl:nth-child(2){background:rgba(255,189,46,.72)}
+.tl:nth-child(3){background:rgba(39,201,63,.7)}
+.tb-title{
+  margin-left:10px;font-size:12.5px;color:var(--faint);letter-spacing:.01em;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+.stage{
+  position:relative;
+  padding:clamp(26px,4.6vw,46px) clamp(22px,4.6vw,52px) clamp(34px,4.6vw,48px);
+  min-height:300px;
+  overflow:hidden;
+}
+.doc{max-width:560px}
+.doc h3{
+  margin:0 0 14px;font-size:clamp(17px,2.4vw,21px);font-weight:600;
+  letter-spacing:-.02em;color:rgba(244,244,246,.92);
+}
+.doc p{
+  margin:0 0 12px;font-size:clamp(14px,1.8vw,15.5px);line-height:1.72;
+  color:rgba(154,155,166,.78);letter-spacing:-.005em;
+}
+.doc p:last-child{margin-bottom:0}
+mark{
+  background:transparent;color:inherit;
+  border-radius:4px;padding:1px 2px;margin:0 -2px;
+  transition:background .28s ease,color .28s ease,box-shadow .28s ease;
+}
+mark.lit{
+  background:rgba(91,140,255,.19);
+  color:rgba(244,244,246,.98);
+  box-shadow:0 0 0 1px rgba(91,140,255,.28);
+}
+
+/* cursor — one wrapper carries the travel, children only scale/tint */
+.ptr{
+  position:absolute;top:0;left:0;
+  transform:translate(56px,56px);
+  transition:transform 1.05s cubic-bezier(.55,.02,.2,1);
+  z-index:6;pointer-events:none;
+  will-change:transform;
+}
+#cursor{
+  display:block;position:relative;
+  width:19px;height:auto;
+  filter:drop-shadow(0 3px 7px rgba(0,0,0,.65));
+  transition:filter .3s ease;
+}
+#cursor path{fill:#fff;transition:fill .3s ease}
+.ptr.hot #cursor path{fill:url(#cg)}
+.ptr.hot #cursor{filter:drop-shadow(0 0 12px rgba(91,140,255,.8))}
+.ring{
+  position:absolute;top:-13px;left:-12px;
+  width:44px;height:44px;
+  border-radius:50%;
+  border:1.5px solid rgba(91,140,255,.85);
+  opacity:0;
+}
+.ring.go{animation:ring .85s cubic-bezier(.2,.7,.3,1)}
+@keyframes ring{
+  0%{opacity:.95;transform:scale(.35)}
+  70%{opacity:.3;transform:scale(1.25)}
+  100%{opacity:0;transform:scale(1.5)}
+}
+
+/* result pill */
+.pill{
+  position:absolute;top:0;left:0;z-index:7;
+  max-width:min(330px,72%);
+  padding:11px 14px;
+  border-radius:13px;
+  border:1px solid rgba(255,255,255,.15);
+  /* solid on purpose: a translucent panel over body copy is unreadable */
+  background:linear-gradient(180deg,#1B1B22,#121217);
+  box-shadow:0 24px 60px -14px rgba(0,0,0,.96),0 1px 0 rgba(255,255,255,.06) inset;
+  opacity:0;
+  transform:translate(0,0) scale(.94);
+  transform-origin:top left;
+  transition:opacity .3s ease,transform .38s cubic-bezier(.2,.9,.3,1);
+  pointer-events:none;
+}
+.pill.show{opacity:1}
+.pill-head{
+  display:flex;align-items:center;gap:7px;
+  font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:6px;
+}
+.pill-head svg{width:9px;height:auto;opacity:.9}
+.pill-body{font-size:14px;line-height:1.5;color:rgba(244,244,246,.95);letter-spacing:-.005em}
+.pill-meta{margin-top:7px;font-size:11.5px;color:var(--faint);display:flex;align-items:center;gap:6px}
+
+/* keycaps */
+.keys{
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:14px clamp(22px,4.6vw,52px);
+  border-top:1px solid var(--line);
+  background:rgba(0,0,0,.22);
+}
+.cap{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:6px 11px;border-radius:9px;
+  font-size:12.5px;font-weight:500;letter-spacing:-.005em;
+  color:var(--faint);
+  border:1px solid rgba(255,255,255,.09);
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.015));
+  box-shadow:0 1.5px 0 rgba(0,0,0,.4);
+  transition:color .26s ease,border-color .26s ease,background .26s ease,box-shadow .26s ease,transform .12s ease;
+}
+.cap kbd{
+  font-family:var(--mono);font-size:11.5px;font-weight:600;
+  color:rgba(244,244,246,.7);transition:color .26s ease;
+}
+.cap.on{
+  color:var(--text);
+  border-color:rgba(91,140,255,.55);
+  background:linear-gradient(180deg,rgba(91,140,255,.24),rgba(91,140,255,.09));
+  box-shadow:0 0 22px -4px rgba(91,140,255,.6),0 1.5px 0 rgba(0,0,0,.4);
+  transform:translateY(1px);
+}
+.cap.on kbd{color:#fff}
+
+/* ---------- trust row ---------- */
+.trust{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:10px 26px;
+  margin:clamp(38px,6vh,54px) 0 0;
+  font-size:13.5px;color:var(--faint);letter-spacing:-.005em;
+}
+.trust span{display:inline-flex;align-items:center;gap:8px}
+.trust i{width:4px;height:4px;border-radius:50%;background:rgba(91,140,255,.65);flex:none}
+
+footer{
+  margin-top:clamp(52px,8vh,84px);
+  padding:26px 0 40px;
+  border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:13px;color:var(--faint);
+}
+footer a{color:var(--muted);text-decoration:none;transition:color .16s ease}
+footer a:hover{color:var(--text)}
+
+/* ---------- responsive ---------- */
+@media (max-width:720px){
+  .grid{background-size:56px 56px}
+  form{flex-direction:column}
+  button{width:100%}
+  .nav-note{display:none}
+  .stage{min-height:330px}
+  .pill{max-width:82%}
+  .doc p{margin-bottom:10px}
+}
+@media (max-width:420px){
+  .keys{gap:6px;padding:12px 20px}
+  .cap{padding:5px 9px;font-size:11.5px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+
+/* visually hidden but read by screen readers */
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true"></div>
+<div class="grid" aria-hidden="true"></div>
+
+<!-- shared gradient def for the cursor -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <defs>
+    <linearGradient id="cg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5B8CFF"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<div class="wrap">
+
+  <header>
+    <nav class="nav">
+      <a class="brand" href="/" aria-label="Point — home">
+        <svg viewBox="0 0 66 76.05" aria-hidden="true"><g fill="#fff" transform="translate(-24 -14.95)"><path d="M 24.14 18.79 L 24.14 18.79 A 3.02 3.02 0 0 1 28.72 15.48 L 71.10 43.73 L 71.10 43.73 A 6.01 6.01 0 0 1 70.85 53.89 L 47.15 68.11 L 47.15 68.11 A 7.21 7.21 0 0 1 36.49 63.84 L 24.14 18.79 Z"/><path d="M 66.00 79.00 a 12.00 12.00 0 1 1 24.00 0 a 12.00 12.00 0 1 1 -24.00 0 Z"/></g></svg>
+        <span>Point</span>
+      </a>
+      <div class="nav-note"><i class="dot" aria-hidden="true"></i> Private beta — macOS</div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">
+        <svg viewBox="0 0 66 76.05" aria-hidden="true"><g fill="currentColor" transform="translate(-24 -14.95)"><path d="M 24.14 18.79 L 24.14 18.79 A 3.02 3.02 0 0 1 28.72 15.48 L 71.10 43.73 L 71.10 43.73 A 6.01 6.01 0 0 1 70.85 53.89 L 47.15 68.11 L 47.15 68.11 A 7.21 7.21 0 0 1 36.49 63.84 L 24.14 18.79 Z"/><path d="M 66.00 79.00 a 12.00 12.00 0 1 1 24.00 0 a 12.00 12.00 0 1 1 -24.00 0 Z"/></g></svg>
+        AI at your cursor
+      </p>
+
+      <h1>Move less.<br><span class="grad">Do more.</span></h1>
+
+      <p class="lede">
+        The mouse cursor hasn't evolved since 1984. We solve the friction of switching apps for Mac users thanks to an <b>AI-powered cursor</b> that understands, translates, saves, and researches anything on screen.
+      </p>
+
+      <div class="form-block">
+        <form id="waitlist" novalidate>
+          <div class="field">
+            <label class="sr" for="email">Email address</label>
+            <input id="email" name="email" type="email" inputmode="email" autocomplete="email"
+                   placeholder="you@company.com" required aria-describedby="msg">
+          </div>
+          <button type="submit" id="submit">Join the waitlist</button>
+        </form>
+        <p class="msg" id="msg" role="status" aria-live="polite">Early access for macOS. One email at launch — nothing else.</p>
+      </div>
+    </section>
+
+    <!-- ---------------- animated demo ---------------- -->
+    <section class="demo" aria-label="How Point works">
+      <div class="titlebar">
+        <i class="tl"></i><i class="tl"></i><i class="tl"></i>
+        <span class="tb-title" id="tbTitle">Reimagining the mouse pointer for the AI era</span>
+      </div>
+
+      <div class="stage" id="stage">
+        <div class="doc" aria-hidden="true">
+          <h3>Reimagining the mouse pointer for the AI era</h3>
+          <p>Every AI product today is a chat box. You leave what you were doing, paste your context into a tab, and carry the answer back by hand. <mark id="w1">That round trip is the whole problem.</mark></p>
+          <p>Il puntatore del mouse non è cambiato dal 1984. <mark id="w2">È rimasto un semplice strumento di selezione</mark>, mentre tutto il resto del computer è diventato intelligente.</p>
+          <p>Point runs natively on macOS. <mark id="w3">Hold a key, and the cursor becomes the interface</mark> — it reads what is on screen, not what is in your clipboard.</p>
+        </div>
+
+        <div class="ptr" id="ptr" aria-hidden="true">
+          <div class="ring" id="ring"></div>
+          <svg id="cursor" viewBox="0 0 66 76.05">
+            <g transform="translate(-24 -14.95)">
+              <path d="M 24.14 18.79 L 24.14 18.79 A 3.02 3.02 0 0 1 28.72 15.48 L 71.10 43.73 L 71.10 43.73 A 6.01 6.01 0 0 1 70.85 53.89 L 47.15 68.11 L 47.15 68.11 A 7.21 7.21 0 0 1 36.49 63.84 L 24.14 18.79 Z"/>
+              <path d="M 66.00 79.00 a 12.00 12.00 0 1 1 24.00 0 a 12.00 12.00 0 1 1 -24.00 0 Z"/>
+            </g>
+          </svg>
+        </div>
+
+        <div class="pill" id="pill" aria-hidden="true">
+          <div class="pill-head">
+            <svg viewBox="0 0 66 76.05" aria-hidden="true"><g fill="currentColor" transform="translate(-24 -14.95)"><path d="M 24.14 18.79 L 24.14 18.79 A 3.02 3.02 0 0 1 28.72 15.48 L 71.10 43.73 L 71.10 43.73 A 6.01 6.01 0 0 1 70.85 53.89 L 47.15 68.11 L 47.15 68.11 A 7.21 7.21 0 0 1 36.49 63.84 L 24.14 18.79 Z"/><path d="M 66.00 79.00 a 12.00 12.00 0 1 1 24.00 0 a 12.00 12.00 0 1 1 -24.00 0 Z"/></g></svg>
+            <span id="pillLabel">Translate</span>
+          </div>
+          <div class="pill-body" id="pillBody"></div>
+          <div class="pill-meta" id="pillMeta"></div>
+        </div>
+      </div>
+
+      <div class="keys" role="list">
+        <span class="cap" role="listitem" data-cap="understand"><kbd>⌥Space</kbd> Understand</span>
+        <span class="cap" role="listitem" data-cap="translate"><kbd>⌥T</kbd> Translate</span>
+        <span class="cap" role="listitem" data-cap="save"><kbd>⌥S</kbd> Save</span>
+        <span class="cap" role="listitem" data-cap="research"><kbd>⌥R</kbd> Research</span>
+      </div>
+    </section>
+
+    <p class="trust">
+      <span><i></i> Native Swift</span>
+      <span><i></i> Works in every app</span>
+      <span><i></i> No copy-paste, no tab</span>
+      <span><i></i> Runs on your Mac</span>
+    </p>
+  </main>
+
+  <footer>
+    <span>© 2026 Point</span>
+    <span><a href="mailto:hello@pointai.dev">hello@pointai.dev</a> · pointai.dev</span>
+  </footer>
+
+</div>
+
+<script>
+/* =========================================================
+   1. WAITLIST
+   ---------------------------------------------------------
+   Paste your provider's form URL below. Nothing else to change.
+
+   Mailchimp  → the embedded form's <form action="..."> URL, e.g.
+                https://pointai.us21.list-manage.com/subscribe/post?u=XXXX&id=YYYY
+   ConvertKit → https://app.kit.com/forms/1234567/subscriptions
+   Beehiiv    → https://embeds.beehiiv.com/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+   Leaving this empty keeps the page live but tells visitors
+   signups aren't open yet — it never silently drops an address.
+   ========================================================= */
+const WAITLIST_ENDPOINT = "";
+
+(function () {
+  const form = document.getElementById('waitlist');
+  const input = document.getElementById('email');
+  const btn = document.getElementById('submit');
+  const msg = document.getElementById('msg');
+  const IDLE = msg.textContent;
+
+  const say = (text, kind) => {
+    msg.textContent = text;
+    msg.className = 'msg' + (kind ? ' ' + kind : '');
+  };
+
+  const valid = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+
+  /* Mailchimp has no CORS headers, so it is called over JSONP.
+     Everything else accepts a normal cross-origin POST. */
+  function mailchimp(url, email) {
+    return new Promise((resolve, reject) => {
+      const cb = 'pt_' + Date.now();
+      const u = new URL(url.replace('/post?', '/post-json?').replace(/\/post$/, '/post-json'));
+      u.searchParams.set('EMAIL', email);
+      u.searchParams.set('c', cb);
+      const s = document.createElement('script');
+      const done = (fn) => { delete window[cb]; s.remove(); clearTimeout(t); fn(); };
+      const t = setTimeout(() => done(() => reject(new Error('timeout'))), 10000);
+      window[cb] = (res) => done(() => {
+        if (res && res.result === 'success') return resolve();
+        const raw = (res && res.msg) || '';
+        // Mailchimp reports an existing address as an error — treat it as a win.
+        if (/already subscribed/i.test(raw)) return resolve();
+        reject(new Error(raw.replace(/<[^>]*>/g, '') || 'error'));
+      });
+      s.onerror = () => done(() => reject(new Error('network')));
+      s.src = u.toString();
+      document.body.appendChild(s);
+    });
+  }
+
+  async function post(url, email) {
+    const isKit = /kit\.com|convertkit\.com/.test(url);
+    const body = isKit ? { email_address: email, email: email } : { email: email };
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!r.ok) throw new Error('http ' + r.status);
+  }
+
+  function subscribe(email) {
+    const url = WAITLIST_ENDPOINT.trim();
+    if (!url) return Promise.reject(new Error('not-configured'));
+    if (/list-manage\.com/.test(url)) return mailchimp(url, email);
+    return post(url, email);
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = input.value.trim();
+
+    if (!valid(email)) {
+      say('That email doesn’t look right — mind checking it?', 'err');
+      input.focus();
+      return;
+    }
+
+    btn.disabled = true; input.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = 'Joining…';
+    say('One second…');
+
+    try {
+      await subscribe(email);
+      form.style.display = 'none';
+      say('You’re on the list. We’ll email you the moment Point opens up.', 'ok');
+    } catch (err) {
+      btn.disabled = false; input.disabled = false; btn.textContent = label;
+      if (err.message === 'not-configured') {
+        say('The waitlist opens in a moment — write to hello@pointai.dev and we’ll add you by hand.', 'err');
+      } else {
+        say('That didn’t go through. Try again, or email hello@pointai.dev.', 'err');
+      }
+    }
+  });
+
+  input.addEventListener('input', () => {
+    if (msg.classList.contains('err')) say(IDLE);
+  });
+})();
+
+
+/* =========================================================
+   2. CURSOR DEMO
+   ========================================================= */
+(function () {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  const stage  = document.getElementById('stage');
+  const ptr    = document.getElementById('ptr');
+  const ring   = document.getElementById('ring');
+  const pill   = document.getElementById('pill');
+  const label  = document.getElementById('pillLabel');
+  const bodyEl = document.getElementById('pillBody');
+  const metaEl = document.getElementById('pillMeta');
+  const caps   = [...document.querySelectorAll('.cap')];
+
+  const SCENES = [
+    {
+      key: 'translate', label: 'Translate', target: 'w2',
+      body: 'The mouse pointer hasn’t changed since 1984. It stayed a simple selection tool.',
+      meta: 'Italian → English · 0.4s'
+    },
+    {
+      key: 'understand', label: 'Understand', target: 'w1',
+      body: 'The cost of leaving your task to fetch an answer — the context switch, not the answer itself.',
+      meta: 'Explained in place'
+    },
+    {
+      key: 'save', label: 'Save', target: 'w3',
+      body: 'Summarised and filed to Apple Notes.',
+      meta: 'Reading list · just now'
+    },
+    {
+      key: 'research', label: 'Research', target: 'w1',
+      body: 'Three sources on context-switching cost, ranked by relevance.',
+      meta: 'Searched the web · 1.1s'
+    }
+  ];
+
+  /* `gen` is the run token. Anything that restarts the loop bumps it, and every
+     step re-checks it after awaiting — otherwise a tab-away/tab-back would leave
+     two loops running at once and the pill would drift out of sync with the keycap. */
+  let i = 0, gen = 0, timers = [];
+  const wait = (ms) => new Promise((r) => timers.push(setTimeout(r, ms)));
+  const clear = () => { gen++; timers.forEach(clearTimeout); timers = []; };
+
+  function place(el) {
+    const s = stage.getBoundingClientRect();
+    // a highlight can wrap over several lines — aim at the last line, not the union box
+    const rects = el.getClientRects();
+    const r = rects.length ? rects[rects.length - 1] : el.getBoundingClientRect();
+    // land the cursor tip just inside the end of the highlighted phrase
+    return {
+      x: Math.max(8, Math.min(r.right - s.left - 14, s.width - 46)),
+      y: r.top - s.top + r.height * 0.6
+    };
+  }
+
+  function reset() {
+    pill.classList.remove('show');
+    ptr.classList.remove('hot');
+    ring.classList.remove('go');
+    caps.forEach((c) => c.classList.remove('on'));
+    document.querySelectorAll('mark').forEach((m) => m.classList.remove('lit'));
+  }
+
+  async function play() {
+    const me = ++gen;
+    const alive = () => me === gen;
+
+    const sc = SCENES[i % SCENES.length];
+    const word = document.getElementById(sc.target);
+    const cap = caps.find((c) => c.dataset.cap === sc.key);
+
+    reset();
+    await wait(260); if (!alive()) return;
+
+    // 1 — travel
+    const p = place(word);
+    ptr.style.transform = `translate(${p.x}px, ${p.y}px)`;
+    await wait(1080); if (!alive()) return;
+
+    // 2 — the key goes down, the cursor wakes up
+    cap.classList.add('on');
+    ptr.classList.add('hot');
+    word.classList.add('lit');
+    ring.classList.remove('go'); void ring.offsetWidth; ring.classList.add('go');
+    await wait(430); if (!alive()) return;
+
+    // 3 — the answer arrives next to the cursor
+    label.textContent = sc.label;
+    bodyEl.textContent = sc.body;
+    metaEl.textContent = sc.meta;
+
+    const SW = stage.clientWidth, SH = stage.clientHeight;
+    const PW = pill.offsetWidth, PH = pill.offsetHeight;
+    const flipX = p.x + 22 + PW > SW - 12;
+    let px = flipX ? p.x - PW - 6 : p.x + 22;
+    px = Math.max(12, Math.min(px, SW - PW - 12));
+    const py = Math.max(10, Math.min(p.y + 16, SH - PH - 12));
+    pill.style.transform = `translate(${px}px, ${py}px) scale(1)`;
+    void pill.offsetWidth;
+    pill.classList.add('show');
+
+    // 4 — hold, then hand over to the next scene
+    await wait(2900); if (!alive()) return;
+    i++;
+    play();
+  }
+
+  function start() {
+    clear();
+    if (reduce.matches) {
+      // static, legible end-state — no motion at all
+      const sc = SCENES[0];
+      const word = document.getElementById(sc.target);
+      word.classList.add('lit');
+      caps.find((c) => c.dataset.cap === sc.key).classList.add('on');
+      ptr.classList.add('hot');
+      const p = place(word);
+      ptr.style.transform = `translate(${p.x}px, ${p.y}px)`;
+      label.textContent = sc.label;
+      bodyEl.textContent = sc.body;
+      metaEl.textContent = sc.meta;
+      const px = Math.max(12, Math.min(p.x + 22, stage.clientWidth - pill.offsetWidth - 12));
+      const py = Math.max(10, Math.min(p.y + 16, stage.clientHeight - pill.offsetHeight - 12));
+      pill.style.transform = `translate(${px}px, ${py}px) scale(1)`;
+      pill.classList.add('show');
+      return;
+    }
+    play();
+  }
+
+  // pause while off-screen or in a background tab — no wasted frames
+  let running = false;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (e.isIntersecting && !running) { running = true; start(); }
+      else if (!e.isIntersecting && running) { running = false; clear(); reset(); }
+    });
+  }, { threshold: 0.15 });
+  io.observe(stage);
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) { clear(); reset(); }
+    else if (running) { i++; start(); }
+  });
+
+  let rt;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => { if (running) { reset(); start(); } }, 220);
+  });
+})();
+</script>
+
+</body>
+</html>
