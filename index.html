@@ -480,18 +480,11 @@ footer a:hover{color:var(--text)}
 /* =========================================================
    1. WAITLIST
    ---------------------------------------------------------
-   Paste your provider's form URL below. Nothing else to change.
-
-   Mailchimp  → the embedded form's <form action="..."> URL, e.g.
-                https://pointai.us21.list-manage.com/subscribe/post?u=XXXX&id=YYYY
-   ConvertKit → https://app.kit.com/forms/1234567/subscriptions
-   Beehiiv    → https://embeds.beehiiv.com/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
-   Leaving this empty keeps the page live but tells visitors
-   signups aren't open yet — it never silently drops an address.
+   Posts to /api/subscribe, a Vercel serverless function that
+   talks to beehiiv server-side. The beehiiv API key lives in
+   the BEEHIIV_API_KEY environment variable and never reaches
+   the browser — which is why this doesn't call beehiiv direct.
    ========================================================= */
-const WAITLIST_ENDPOINT = "";
-
 (function () {
   const form = document.getElementById('waitlist');
   const input = document.getElementById('email');
@@ -506,46 +499,38 @@ const WAITLIST_ENDPOINT = "";
 
   const valid = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
 
-  /* Mailchimp has no CORS headers, so it is called over JSONP.
-     Everything else accepts a normal cross-origin POST. */
-  function mailchimp(url, email) {
-    return new Promise((resolve, reject) => {
-      const cb = 'pt_' + Date.now();
-      const u = new URL(url.replace('/post?', '/post-json?').replace(/\/post$/, '/post-json'));
-      u.searchParams.set('EMAIL', email);
-      u.searchParams.set('c', cb);
-      const s = document.createElement('script');
-      const done = (fn) => { delete window[cb]; s.remove(); clearTimeout(t); fn(); };
-      const t = setTimeout(() => done(() => reject(new Error('timeout'))), 10000);
-      window[cb] = (res) => done(() => {
-        if (res && res.result === 'success') return resolve();
-        const raw = (res && res.msg) || '';
-        // Mailchimp reports an existing address as an error — treat it as a win.
-        if (/already subscribed/i.test(raw)) return resolve();
-        reject(new Error(raw.replace(/<[^>]*>/g, '') || 'error'));
+  // Forward any UTM params so beehiiv records where the signup came from.
+  function utm() {
+    const q = new URLSearchParams(location.search);
+    const out = {};
+    ['utm_source', 'utm_medium', 'utm_campaign'].forEach((k) => {
+      const v = q.get(k);
+      if (v) out[k] = v.slice(0, 120);
+    });
+    return out;
+  }
+
+  async function subscribe(email) {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), 15000);
+    try {
+      const r = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.assign({ email: email }, utm())),
+        signal: ctl.signal
       });
-      s.onerror = () => done(() => reject(new Error('network')));
-      s.src = u.toString();
-      document.body.appendChild(s);
-    });
-  }
-
-  async function post(url, email) {
-    const isKit = /kit\.com|convertkit\.com/.test(url);
-    const body = isKit ? { email_address: email, email: email } : { email: email };
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!r.ok) throw new Error('http ' + r.status);
-  }
-
-  function subscribe(email) {
-    const url = WAITLIST_ENDPOINT.trim();
-    if (!url) return Promise.reject(new Error('not-configured'));
-    if (/list-manage\.com/.test(url)) return mailchimp(url, email);
-    return post(url, email);
+      let data = {};
+      try { data = await r.json(); } catch (_) {}
+      if (!r.ok || !data.ok) {
+        const e = new Error(data.error || 'http_' + r.status);
+        e.code = data.error;
+        throw e;
+      }
+      return data;
+    } finally {
+      clearTimeout(t);
+    }
   }
 
   form.addEventListener('submit', async (e) => {
@@ -553,26 +538,30 @@ const WAITLIST_ENDPOINT = "";
     const email = input.value.trim();
 
     if (!valid(email)) {
-      say('That email doesn’t look right — mind checking it?', 'err');
+      say('That email doesn\u2019t look right \u2014 mind checking it?', 'err');
       input.focus();
       return;
     }
 
     btn.disabled = true; input.disabled = true;
     const label = btn.textContent;
-    btn.textContent = 'Joining…';
-    say('One second…');
+    btn.textContent = 'Joining\u2026';
+    say('One second\u2026');
 
     try {
-      await subscribe(email);
+      const res = await subscribe(email);
       form.style.display = 'none';
-      say('You’re on the list. We’ll email you the moment Point opens up.', 'ok');
+      say(res.status === 'validating'
+        ? 'Almost there \u2014 check your inbox and confirm your email to finish.'
+        : 'You\u2019re on the list. Check your inbox \u2014 there\u2019s a note from us on the way.', 'ok');
     } catch (err) {
       btn.disabled = false; input.disabled = false; btn.textContent = label;
-      if (err.message === 'not-configured') {
-        say('The waitlist opens in a moment — write to hello@pointai.dev and we’ll add you by hand.', 'err');
+      if (err.code === 'not_configured') {
+        say('The waitlist isn\u2019t open yet \u2014 write to hello@pointai.dev and we\u2019ll add you by hand.', 'err');
+      } else if (err.name === 'AbortError') {
+        say('That took too long. Try again in a moment?', 'err');
       } else {
-        say('That didn’t go through. Try again, or email hello@pointai.dev.', 'err');
+        say('That didn\u2019t go through. Try again, or email hello@pointai.dev.', 'err');
       }
     }
   });
