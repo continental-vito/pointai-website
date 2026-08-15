@@ -8,9 +8,14 @@ Static page plus one serverless function. No build step, no dependencies.
 index.html          the whole page — markup, styles, animation, form logic
 api/subscribe.js    serverless function: creates the beehiiv subscription
 og-image.png        1200×630 social card
-favicon.svg         flips black/white via prefers-color-scheme
+favicon.ico         16/32/48 multi-size, for Safari and anything ignoring SVG icons
+favicon.svg         dark tile + white mark, matching the PNGs
+apple-touch-icon.png  180×180, opaque — iOS ignores an SVG here
+icon-192/512.png    web manifest icons (+ a maskable variant)
+safari-pinned-tab.svg  single flat path, Safari colours it itself
+site.webmanifest    name, theme colour, icon set
 point-mark.svg      the mark on its own (white)
-app-icon.svg        macOS squircle icon, used as the apple-touch-icon
+app-icon.svg        macOS squircle icon
 vercel.json         cache + security headers
 ```
 
@@ -59,16 +64,29 @@ blue `#5B8CFF` → violet `#A78BFA` accent, the pointer mark as the brand, physi
 keycaps for every shortcut. The mark itself stays monochrome per the brand rules.
 
 The demo panel is a pure CSS/JS animation — no video file — cycling
-Translate ⌥T, Understand ⌥Space, Save ⌥S and Research ⌥R. It pauses when
+Understand ⌥Space, Translate ⌥T, Save ⌥S and Voice ⌥^. It pauses when
 scrolled out of view or when the tab is backgrounded, and collapses to a
 static end-state under `prefers-reduced-motion`.
 
-Two things to preserve if you edit it:
+The **voice** scene runs in two beats: a mic badge rides along with the pointer
+while the spoken command is shown in quotes, then the pill swaps to the result.
+
+Three things to preserve if you edit it:
 
 - The result pill is **deliberately solid**, not glass. Nested `backdrop-filter`
   doesn't blur through the parent's own blur, so body copy read straight through it.
 - The animation loop is guarded by a generation token. Without it, a tab-away and
   back starts a second concurrent loop and the pill drifts out of sync with the keycap.
+- The pill is measured and positioned against each scene's **final** copy before the
+  first beat is shown. The voice scene's result line is longer than the spoken one, so
+  measuring the short text first would let the pill grow off the bottom on narrow screens.
+
+## Icons
+
+`apple-touch-icon` must be a PNG — iOS silently ignores an SVG, which makes browsers
+fall back to a generated letter tile (the site showed a plain "P"). All raster icons are
+generated from the brand mark by `icons/render.js`; the small sizes use a tighter corner
+radius and a larger mark, because a squircle turns to mush at 16px.
 
 ## Local preview
 
