@@ -4,3 +4,4 @@
 node_modules/
 fix-and-push.sh
 release.sh
+update-copy.sh

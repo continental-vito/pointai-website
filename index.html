@@ -593,8 +593,10 @@ footer a:hover{color:var(--text)}
       const res = await subscribe(email);
       form.style.display = 'none';
       say(res.status === 'validating'
-        ? 'Almost there \u2014 check your inbox and confirm your email to finish.'
-        : 'You\u2019re on the list. Check your inbox \u2014 there\u2019s a note from us on the way.', 'ok');
+        // Double opt-in is off today, so this branch is dormant. If it is ever switched
+        // on it must keep telling people to confirm, or they never actually subscribe.
+        ? 'Thank you \u2014 one last step: confirm your email in your inbox to finish.'
+        : 'Thank you for joining. You\u2019re on the list, and a note from us is on its way.', 'ok');
     } catch (err) {
       btn.disabled = false; input.disabled = false; btn.textContent = label;
       if (err.code === 'not_configured') {
