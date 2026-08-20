@@ -590,13 +590,12 @@ footer a:hover{color:var(--text)}
     say('One second\u2026');
 
     try {
-      const res = await subscribe(email);
+      await subscribe(email);
       form.style.display = 'none';
-      say(res.status === 'validating'
-        // Double opt-in is off today, so this branch is dormant. If it is ever switched
-        // on it must keep telling people to confirm, or they never actually subscribe.
-        ? 'Thank you \u2014 one last step: confirm your email in your inbox to finish.'
-        : 'Thank you for joining. You\u2019re on the list, and a note from us is on its way.', 'ok');
+      // One message for everyone. beehiiv reports "validating" while it runs its own
+      // address check, which is not double opt-in - there is nothing for anyone to
+      // confirm, so promising a confirmation email would be a lie.
+      say('Thank you for joining. You\u2019re on the list, and a note from us is on its way.', 'ok');
     } catch (err) {
       btn.disabled = false; input.disabled = false; btn.textContent = label;
       if (err.code === 'not_configured') {
