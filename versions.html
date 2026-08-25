@@ -75,7 +75,10 @@ h1 .grad{
   -webkit-text-fill-color:transparent;color:transparent;
 }
 .lede{
-  margin:0 0 40px;max-width:600px;font-size:clamp(15.5px,2vw,17.5px);line-height:1.62;color:var(--muted);
+  /* No max-width: the column is set by .wrap, so the justified right edge lines
+     up with the release cards below it. A narrower measure left the text ending
+     short of the cards, which reads as a mistake rather than as a choice. */
+  margin:0 0 40px;font-size:clamp(15.5px,2vw,17.5px);line-height:1.62;color:var(--muted);
   /* Hyphenation goes with justification, not instead of it: without it a
      narrow column pulls word gaps wide enough to form rivers down the page. */
   text-align:justify;hyphens:auto;-webkit-hyphens:auto;
