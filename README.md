@@ -97,7 +97,34 @@ Add to the two already there (Vercel → Settings → Environment Variables):
 
 Redeploy after adding them.
 
-### Inviting someone
+### Inviting someone through beehiiv
+
+One designed email, a different link per recipient. `tools/beehiiv-invites.js`
+writes each subscriber's invite **code** into the `beta_invite_code` custom
+field; the email's download button is
+`https://pointai.dev/download?t={{beta_invite_code|}}` and beehiiv substitutes
+the code at send time.
+
+```bash
+INVITE_SECRET=… BEEHIIV_API_KEY=… node tools/beehiiv-invites.js          # dry run
+INVITE_SECRET=… BEEHIIV_API_KEY=… node tools/beehiiv-invites.js --write
+```
+
+**The code, not the whole URL, and that is not cosmetic.** beehiiv's editor
+strips any `href` that does not start with `http(s)`, so a button linked to the
+bare merge tag `{{beta_invite_url}}` ships with no link at all. In the query
+string of a real URL the tag survives — and if the field is ever empty the button
+lands on `/download` with no code, which answers "this link is missing its invite
+code" instead of breaking.
+
+Audience is the **Beta testers** segment (`custom_field(beta_invite_code) EXISTS
+AND status = 'active'`), so the email cannot reach someone whose code was never
+minted.
+
+Send yourself a test first. Merge tags render empty in a plain preview, which
+looks identical to the field being broken — only a real send proves it.
+
+### Inviting someone by hand
 
 ```bash
 INVITE_SECRET=… node tools/invite.js ada@example.com

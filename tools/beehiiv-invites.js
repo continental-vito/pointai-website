@@ -30,7 +30,16 @@ const fs = require('fs');
 
 const PUBLICATION_ID = process.env.BEEHIIV_PUBLICATION_ID
   || 'pub_15c9d5e4-3af0-4601-9782-8067057fedaf';
-const FIELD = 'beta_invite_url';
+// The CODE, not the whole URL.
+//
+// beehiiv's editor strips any href that does not begin with http(s), so a button
+// whose link was the bare merge tag {{beta_invite_url}} would have shipped with
+// no link at all. Putting the tag in the query string of a real URL —
+// https://pointai.dev/download?t={{beta_invite_code}} — survives parsing, and it
+// degrades correctly too: if the field is ever empty, the button lands on
+// /download with no code, which answers with "this link is missing its invite
+// code" rather than a broken URL.
+const FIELD = 'beta_invite_code';
 const SITE = process.env.SITE || 'https://pointai.dev';
 const SIG_BYTES = 16;              // must match api/download.js
 const API = 'https://api.beehiiv.com/v2';
@@ -70,10 +79,15 @@ function idFor(email) {
   return `${local || 'tester'}-${short}`;
 }
 
-const linkFor = (email) => {
+// What goes in the custom field: "<id>.<signature>".
+const codeFor = (email) => {
   const id = idFor(email);
-  return `${SITE}/download?t=${id}.${sign(id)}`;
+  return `${id}.${sign(id)}`;
 };
+
+// The whole link, for the CSV and for the dry-run listing — where a human is
+// going to click it, so it has to be complete.
+const linkFor = (email) => `${SITE}/download?t=${codeFor(email)}`;
 
 const bee = async (path, options = {}) => {
   const r = await fetch(`${API}${path}`, {
@@ -142,8 +156,8 @@ async function activeSubscribers() {
 
   if (CSV) {
     // Import this in beehiiv and map the second column to beta_invite_url.
-    console.log('email,beta_invite_url');
-    for (const p of people) console.log(`${p.email},${linkFor(p.email)}`);
+    console.log('email,beta_invite_code,beta_invite_url');
+    for (const p of people) console.log(`${p.email},${codeFor(p.email)},${linkFor(p.email)}`);
     return;
   }
 
@@ -160,7 +174,7 @@ async function activeSubscribers() {
     try {
       await bee(`/publications/${PUBLICATION_ID}/subscriptions/${p.id}`, {
         method: 'PUT',
-        body: JSON.stringify({ custom_fields: [{ name: FIELD, value: url }] }),
+        body: JSON.stringify({ custom_fields: [{ name: FIELD, value: codeFor(p.email) }] }),
       });
       written++;
       console.log(`  ✓ ${p.email}`);
@@ -180,7 +194,7 @@ async function activeSubscribers() {
   const got = fields.find((f) => f.name === FIELD);
 
   console.error(`\n${written}/${people.length} written.`);
-  if (got && got.value === linkFor(check.email)) {
+  if (got && got.value === codeFor(check.email)) {
     console.error(`✓ verified on ${check.email} — merge tag {{${FIELD}}} will resolve`);
   } else {
     console.error(`✗ VERIFY FAILED — ${FIELD} did not read back on ${check.email}.`);
