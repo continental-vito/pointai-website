@@ -74,7 +74,12 @@ h1 .grad{
   -webkit-background-clip:text;background-clip:text;
   -webkit-text-fill-color:transparent;color:transparent;
 }
-.lede{margin:0 0 40px;max-width:600px;font-size:clamp(15.5px,2vw,17.5px);line-height:1.62;color:var(--muted)}
+.lede{
+  margin:0 0 40px;max-width:600px;font-size:clamp(15.5px,2vw,17.5px);line-height:1.62;color:var(--muted);
+  /* Hyphenation goes with justification, not instead of it: without it a
+     narrow column pulls word gaps wide enough to form rivers down the page. */
+  text-align:justify;hyphens:auto;-webkit-hyphens:auto;
+}
 .lede a{color:var(--text);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
 .lede a:hover{border-bottom-color:var(--blue)}
 
@@ -103,11 +108,30 @@ h1 .grad{
 .notes{
   margin:16px 0 0;padding:16px 0 0;border-top:1px solid var(--line);
   font-size:14.5px;line-height:1.6;color:var(--muted);
-  white-space:pre-wrap;word-wrap:break-word;
-  /* Notes are markdown from the release; long tables would otherwise push the
-     page sideways on a phone. */
-  overflow-x:auto;
 }
+.notes > *:first-child{margin-top:0}
+.notes > *:last-child{margin-bottom:0}
+.notes h3{margin:22px 0 8px;font-size:15px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+.notes h4{margin:18px 0 6px;font-size:13.5px;font-weight:600;color:var(--text)}
+.notes p{margin:0 0 12px}
+.notes strong{color:var(--text);font-weight:600}
+.notes a{color:var(--text);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
+.notes a:hover{border-bottom-color:var(--blue)}
+.notes code{
+  font-family:var(--mono);font-size:12.5px;color:var(--text);
+  background:rgba(255,255,255,.06);border-radius:5px;padding:1px 5px;
+}
+.notes ul{margin:0 0 12px;padding-left:20px}
+.notes li{margin:0 0 5px}
+/* A wide table scrolls inside its own box. Left to the page, the shortcut table
+   pushes the whole layout sideways on a phone. */
+.table-scroll{overflow-x:auto;margin:0 0 14px;-webkit-overflow-scrolling:touch}
+.notes table{border-collapse:collapse;width:100%;font-size:13.5px}
+.notes th,.notes td{
+  text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top;
+}
+.notes th{color:var(--text);font-weight:600;white-space:nowrap}
+.notes tbody tr:last-child td{border-bottom:0}
 .dl{
   display:inline-flex;align-items:center;gap:9px;margin:18px 0 0;
   height:44px;padding:0 20px;
@@ -123,6 +147,7 @@ h1 .grad{
 
 .state{
   border:1px solid var(--line);background:var(--glass);border-radius:var(--radius);
+  /* Deliberately centred, not justified: it is one sentence. */
   padding:28px 24px;text-align:center;color:var(--muted);font-size:15px;
 }
 .state.err{color:#FF8F8F}
@@ -131,6 +156,7 @@ h1 .grad{
   margin:26px 0 0;padding:18px 20px;
   border:1px solid var(--line);border-radius:12px;
   font-size:13.5px;line-height:1.6;color:var(--faint);
+  text-align:justify;hyphens:auto;-webkit-hyphens:auto;
 }
 .note b{color:var(--muted);font-weight:600}
 .note code{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
@@ -226,6 +252,98 @@ footer a:hover{color:var(--text)}
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
   ));
 
+  /* -------------------------------------------------------
+     Release notes are markdown, and were being shown as
+     their own source — "## Point AI 0.12.0", pipe-delimited
+     table rows and all. Enough of markdown is rendered here
+     to cover what release notes actually use.
+
+     Everything is escaped FIRST and the markup is added
+     afterwards, so nothing in a release body can inject an
+     element. That ordering is the whole safety argument, and
+     it is why this does not simply set innerHTML on the raw
+     text.
+     ------------------------------------------------------- */
+  const inline = (t) => esc(t)
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    // Only http(s) and mailto survive as links. The escape above already
+    // neutralises anything else, but an unchecked scheme here would be the one
+    // place a javascript: URL could come back to life.
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+|mailto:[^)\s]+)\)/g,
+             '<a href="$2" rel="noopener noreferrer">$1</a>');
+
+  const row = (line) => line.replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+
+  function markdown(src) {
+    const lines = String(src).replace(/\r\n/g, '\n').split('\n');
+    const out = [];
+    let para = [], list = [];
+
+    const flushPara = () => {
+      if (para.length) { out.push('<p>' + inline(para.join(' ')) + '</p>'); para = []; }
+    };
+    const flushList = () => {
+      if (list.length) {
+        out.push('<ul>' + list.map((i) => '<li>' + inline(i) + '</li>').join('') + '</ul>');
+        list = [];
+      }
+    };
+    const flush = () => { flushPara(); flushList(); };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      if (!line.trim()) { flush(); continue; }
+
+      // Headings. The body opens with an h2-level title that repeats the version
+      // already in the card header, so it is dropped rather than shown twice.
+      const heading = line.match(/^(#{2,4})\s+(.*)$/);
+      if (heading) {
+        flush();
+        if (heading[1].length > 2) {
+          const tag = heading[1].length === 3 ? 'h3' : 'h4';
+          out.push('<' + tag + '>' + inline(heading[2]) + '</' + tag + '>');
+        }
+        continue;
+      }
+
+      // Table: a pipe row followed by a |---|---| separator.
+      if (line.trim().startsWith('|') && /^\s*\|[\s:|-]+\|\s*$/.test(lines[i + 1] || '')) {
+        flush();
+        const head = row(line);
+        const body = [];
+        i += 2;
+        while (i < lines.length && lines[i].trim().startsWith('|')) { body.push(row(lines[i])); i++; }
+        i--;
+        out.push('<div class="table-scroll"><table><thead><tr>'
+          + head.map((c) => '<th>' + inline(c) + '</th>').join('')
+          + '</tr></thead><tbody>'
+          + body.map((r) => '<tr>' + r.map((c) => '<td>' + inline(c) + '</td>').join('') + '</tr>').join('')
+          + '</tbody></table></div>');
+        continue;
+      }
+
+      const bullet = line.match(/^\s*[-*]\s+(.*)$/);
+      if (bullet) { flushPara(); list.push(bullet[1]); continue; }
+
+      // An indented line under an open bullet continues that bullet. Release
+      // notes wrap at 80 columns, so nearly every bullet has one — treated as a
+      // new paragraph, each bullet became its own single-item list with an
+      // orphaned line of prose after it.
+      if (list.length && /^\s+\S/.test(line)) {
+        list[list.length - 1] += ' ' + line.trim();
+        continue;
+      }
+
+      flushList();
+      para.push(line.trim());
+    }
+
+    flush();
+    return out.join('');
+  }
+
   const when = (iso) => {
     if (!iso) return '';
     const d = new Date(iso);
@@ -267,7 +385,7 @@ footer a:hover{color:var(--text)}
           +   '<span class="tag">' + esc(rel.tag) + '</span>'
           + '</div>'
           + '<p class="meta">' + esc(when(rel.publishedAt)) + esc(size(rel.size)) + '</p>'
-          + (rel.notes ? '<div class="notes">' + esc(rel.notes) + '</div>' : '')
+          + (rel.notes ? '<div class="notes">' + markdown(rel.notes) + '</div>' : '')
           + button
           + '</article>';
       }).join('');
