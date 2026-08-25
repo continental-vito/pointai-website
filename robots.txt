@@ -2,3 +2,8 @@ User-agent: *
 Allow: /
 
 Sitemap: https://pointai.dev/sitemap.xml
+
+# The beta pages are for people holding an invite. noindex is on the page too;
+# this stops the crawl before it starts.
+Disallow: /versions
+Disallow: /download

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Point — Beta builds</title>
+<meta name="description" content="Every Point AI beta build, newest first. Download with your invite link.">
+<meta name="theme-color" content="#08080A">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://pointai.dev/versions">
+<!-- Not a page for search results: it is only useful to someone holding an
+     invite, and an indexed download page invites people who cannot use it. -->
+<meta name="robots" content="noindex, follow">
+
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0B0B0C">
+
+<style>
+:root{
+  --ink:#08080A; --paper:#FFFFFF;
+  --blue:#5B8CFF; --violet:#A78BFA;
+  --text:#F4F4F6; --muted:#9A9BA6; --faint:#6A6B76;
+  --line:rgba(255,255,255,.09); --glass:rgba(255,255,255,.045);
+  --radius:16px;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Inter,system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--ink);color:var(--text);font-family:var(--font);
+  font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;overflow-x:hidden;
+}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg::before{content:"";position:absolute;border-radius:50%;filter:blur(120px);
+  width:min(90vw,900px);aspect-ratio:1;top:-38vh;left:50%;transform:translateX(-62%);
+  background:radial-gradient(circle,rgba(91,140,255,.20),transparent 66%);}
+.grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:72px 72px;opacity:.30;
+  mask-image:radial-gradient(ellipse 80% 50% at 50% 12%,#000 20%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 50% at 50% 12%,#000 20%,transparent 78%);
+}
+.wrap{position:relative;z-index:1;max-width:780px;margin:0 auto;padding:0 24px}
+
+header{padding:26px 0 0}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text)}
+.brand svg{width:15px;height:auto;display:block}
+.brand span{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.nav-note{
+  font-size:12.5px;color:var(--muted);letter-spacing:.02em;
+  display:flex;align-items:center;gap:8px;
+  border:1px solid var(--line);background:var(--glass);
+  padding:6px 12px;border-radius:999px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--blue)}
+
+main{padding:clamp(48px,9vh,84px) 0 0}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:12.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--line);background:var(--glass);
+  padding:7px 15px;border-radius:999px;margin:0 0 24px;
+}
+h1{margin:0 0 18px;font-size:clamp(38px,6.4vw,58px);line-height:1.02;letter-spacing:-.04em;font-weight:640}
+h1 .grad{
+  background:linear-gradient(100deg,var(--blue) 8%,var(--violet) 92%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
+.lede{margin:0 0 40px;max-width:600px;font-size:clamp(15.5px,2vw,17.5px);line-height:1.62;color:var(--muted)}
+.lede a{color:var(--text);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
+.lede a:hover{border-bottom-color:var(--blue)}
+
+/* ---------- release list ---------- */
+.rel{
+  border:1px solid var(--line);background:var(--glass);border-radius:var(--radius);
+  padding:22px 24px;margin:0 0 14px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+/* Title and badge group left, tag pushed right. Three flex children under
+   space-between put the badge in the middle of the row, adrift between the two
+   things it is not attached to. */
+.rel-head{display:flex;align-items:baseline;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.rel-title{display:flex;align-items:baseline;gap:11px;flex-wrap:wrap}
+.rel h2{margin:0;font-size:21px;font-weight:600;letter-spacing:-.02em}
+.tag{
+  font-family:var(--mono);font-size:11.5px;color:var(--faint);
+  border:1px solid var(--line);border-radius:6px;padding:2px 7px;
+}
+.latest{
+  font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  color:#0A0A0C;background:linear-gradient(100deg,var(--blue),var(--violet));
+  border-radius:999px;padding:3px 10px;
+}
+.meta{margin:8px 0 0;font-size:13px;color:var(--faint)}
+.notes{
+  margin:16px 0 0;padding:16px 0 0;border-top:1px solid var(--line);
+  font-size:14.5px;line-height:1.6;color:var(--muted);
+  white-space:pre-wrap;word-wrap:break-word;
+  /* Notes are markdown from the release; long tables would otherwise push the
+     page sideways on a phone. */
+  overflow-x:auto;
+}
+.dl{
+  display:inline-flex;align-items:center;gap:9px;margin:18px 0 0;
+  height:44px;padding:0 20px;
+  font-size:15px;font-weight:600;letter-spacing:-.01em;color:#0A0A0C;
+  background:linear-gradient(100deg,var(--blue),var(--violet));
+  border:0;border-radius:12px;cursor:pointer;text-decoration:none;
+  transition:transform .16s cubic-bezier(.2,.8,.3,1),box-shadow .16s ease;
+  box-shadow:0 6px 24px -8px rgba(91,140,255,.55);
+}
+.dl:hover{transform:translateY(-1px);box-shadow:0 10px 30px -8px rgba(91,140,255,.7)}
+.dl.off{background:none;color:var(--faint);border:1px solid var(--line);box-shadow:none;cursor:default}
+.dl.off:hover{transform:none;box-shadow:none}
+
+.state{
+  border:1px solid var(--line);background:var(--glass);border-radius:var(--radius);
+  padding:28px 24px;text-align:center;color:var(--muted);font-size:15px;
+}
+.state.err{color:#FF8F8F}
+
+.note{
+  margin:26px 0 0;padding:18px 20px;
+  border:1px solid var(--line);border-radius:12px;
+  font-size:13.5px;line-height:1.6;color:var(--faint);
+}
+.note b{color:var(--muted);font-weight:600}
+.note code{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+
+footer{
+  margin-top:clamp(52px,8vh,84px);padding:26px 0 40px;border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:13px;color:var(--faint);
+}
+footer a{color:var(--muted);text-decoration:none;transition:color .16s ease}
+footer a:hover{color:var(--text)}
+
+@media (max-width:720px){
+  .grid{background-size:56px 56px}
+  .nav-note{display:none}
+  .dl{width:100%;justify-content:center}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.001ms!important}
+}
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true"></div>
+<div class="grid" aria-hidden="true"></div>
+
+<div class="wrap">
+  <header>
+    <nav class="nav">
+      <a class="brand" href="/" aria-label="Point — home">
+        <svg viewBox="0 0 66 76.05" aria-hidden="true"><g fill="#fff" transform="translate(-24 -14.95)"><path d="M 24.14 18.79 L 24.14 18.79 A 3.02 3.02 0 0 1 28.72 15.48 L 71.10 43.73 L 71.10 43.73 A 6.01 6.01 0 0 1 70.85 53.89 L 47.15 68.11 L 47.15 68.11 A 7.21 7.21 0 0 1 36.49 63.84 L 24.14 18.79 Z"/><path d="M 66.00 79.00 a 12.00 12.00 0 1 1 24.00 0 a 12.00 12.00 0 1 1 -24.00 0 Z"/></g></svg>
+        <span>Point</span>
+      </a>
+      <div class="nav-note"><i class="dot" aria-hidden="true"></i> Private beta — macOS</div>
+    </nav>
+  </header>
+
+  <main>
+    <p class="eyebrow">Beta builds</p>
+    <h1>Every build,<br><span class="grad">newest first.</span></h1>
+    <p class="lede">
+      Download with the link from your invitation email. If you arrived here without
+      one, the buttons will ask for it — write to
+      <a href="mailto:hello@pointai.dev">hello@pointai.dev</a> and we will send you one.
+    </p>
+
+    <div id="list">
+      <div class="state">Loading builds…</div>
+    </div>
+
+    <div class="note">
+      <b>macOS will block it on first launch.</b> These builds are not notarized by
+      Apple yet. Open <b>System&nbsp;Settings → Privacy&nbsp;&amp;&nbsp;Security</b>, find the
+      message about Point AI, and click <b>Open Anyway</b>. Requires macOS 14 or later.
+      <br><br>
+      <b>Updating.</b> Install over the top — your settings and API keys are kept.
+      The app's menu bar has <b>Check for Updates…</b>, which brings you back here.
+      <br><br>
+      What the app does with what it reads is written out at
+      <a href="/privacy" style="color:var(--muted)">pointai.dev/privacy</a>.
+    </div>
+  </main>
+
+  <footer>
+    <span>© 2026 Point</span>
+    <span><a href="/privacy">Privacy</a> · <a href="mailto:hello@pointai.dev">hello@pointai.dev</a></span>
+  </footer>
+</div>
+
+<script>
+/* =========================================================
+   Renders /api/versions.
+   ---------------------------------------------------------
+   The list is not baked into this page on purpose: a static
+   list is a second place a release has to be recorded, and
+   the one that gets forgotten. /api/versions reads GitHub
+   Releases server-side, so publishing a release IS updating
+   this page.
+
+   The invite code rides through from the query string into
+   each download link. Someone arriving from their invitation
+   email at /versions?t=… gets working buttons; someone
+   arriving without one gets buttons that say so, rather than
+   a 401 after the click.
+   ========================================================= */
+(function () {
+  const list = document.getElementById('list');
+  const invite = new URLSearchParams(location.search).get('t');
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+
+  const when = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const size = (bytes) => bytes ? ` · ${(bytes / 1048576).toFixed(1)} MB` : '';
+
+  const say = (text, kind) => {
+    list.innerHTML = '<div class="state' + (kind ? ' ' + kind : '') + '">' + esc(text) + '</div>';
+  };
+
+  fetch('/api/versions?channel=beta', { headers: { Accept: 'application/json' } })
+    .then((r) => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+    .then((data) => {
+      const releases = (data && data.releases) || [];
+      if (!releases.length) {
+        return say('No beta build has been published yet. You will get an email when one is.');
+      }
+
+      list.innerHTML = releases.map((rel, i) => {
+        const href = invite
+          ? '/download?t=' + encodeURIComponent(invite) + '&v=' + encodeURIComponent(rel.version)
+          : null;
+
+        // Without an invite the button is inert and says why, rather than
+        // linking to a route that will refuse it after the click.
+        const button = href
+          ? '<a class="dl" href="' + esc(href) + '">Download ' + esc(rel.version) + '</a>'
+          : '<span class="dl off">Use the link from your invitation email</span>';
+
+        return '<article class="rel">'
+          + '<div class="rel-head">'
+          +   '<div class="rel-title">'
+          +     '<h2>Point AI ' + esc(rel.version) + '</h2>'
+          +     (i === 0 ? '<span class="latest">Latest</span>' : '')
+          +   '</div>'
+          +   '<span class="tag">' + esc(rel.tag) + '</span>'
+          + '</div>'
+          + '<p class="meta">' + esc(when(rel.publishedAt)) + esc(size(rel.size)) + '</p>'
+          + (rel.notes ? '<div class="notes">' + esc(rel.notes) + '</div>' : '')
+          + button
+          + '</article>';
+      }).join('');
+    })
+    .catch((err) => {
+      // The real reason, not "something went wrong". This page has no other
+      // diagnostic and the person reading it cannot open a console.
+      say('Could not load the build list (' + err.message + '). '
+        + 'Try again in a few minutes, or email hello@pointai.dev.', 'err');
+    });
+})();
+</script>
+
+</body>
+</html>

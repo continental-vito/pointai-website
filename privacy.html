@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Point — Privacy</title>
+<meta name="description" content="What Point AI reads, what it sends, and what it never touches. No accounts, no telemetry, no analytics.">
+<meta name="theme-color" content="#08080A">
+<meta name="color-scheme" content="dark">
+<link rel="canonical" href="https://pointai.dev/privacy">
+
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#0B0B0C">
+
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://pointai.dev/privacy">
+<meta property="og:site_name" content="Point">
+<meta property="og:title" content="Point — Privacy">
+<meta property="og:description" content="What Point AI reads, what it sends, and what it never touches.">
+<meta property="og:image" content="https://pointai.dev/og-image.png">
+
+<style>
+:root{
+  --ink:#08080A; --blue:#5B8CFF; --violet:#A78BFA;
+  --text:#F4F4F6; --muted:#9A9BA6; --faint:#6A6B76;
+  --line:rgba(255,255,255,.09); --glass:rgba(255,255,255,.045);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Inter,system-ui,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--ink);color:var(--text);font-family:var(--font);
+  font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;overflow-x:hidden;
+}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.bg::before{content:"";position:absolute;border-radius:50%;filter:blur(120px);
+  width:min(90vw,900px);aspect-ratio:1;top:-40vh;left:50%;transform:translateX(-62%);
+  background:radial-gradient(circle,rgba(91,140,255,.18),transparent 66%);}
+.grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:72px 72px;opacity:.28;
+  mask-image:radial-gradient(ellipse 80% 46% at 50% 10%,#000 20%,transparent 78%);
+  -webkit-mask-image:radial-gradient(ellipse 80% 46% at 50% 10%,#000 20%,transparent 78%);
+}
+.wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:0 24px}
+
+header{padding:26px 0 0}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--text)}
+.brand svg{width:15px;height:auto;display:block}
+.brand span{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.nav-note{
+  font-size:12.5px;color:var(--muted);letter-spacing:.02em;
+  display:flex;align-items:center;gap:8px;
+  border:1px solid var(--line);background:var(--glass);
+  padding:6px 12px;border-radius:999px;
+}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--blue)}
+
+main{padding:clamp(48px,9vh,84px) 0 0}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:12.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);border:1px solid var(--line);background:var(--glass);
+  padding:7px 15px;border-radius:999px;margin:0 0 24px;
+}
+h1{margin:0 0 20px;font-size:clamp(38px,6.4vw,58px);line-height:1.02;letter-spacing:-.04em;font-weight:640}
+h1 .grad{
+  background:linear-gradient(100deg,var(--blue) 8%,var(--violet) 92%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+}
+.lede{
+  margin:0 0 12px;font-size:clamp(16px,2.1vw,18.5px);line-height:1.62;color:var(--muted);
+}
+.updated{margin:0 0 44px;font-size:13px;color:var(--faint);font-family:var(--mono)}
+
+section{
+  border-top:1px solid var(--line);
+  padding:28px 0 4px;
+}
+section:first-of-type{border-top:0;padding-top:0}
+h2{margin:0 0 12px;font-size:19px;font-weight:600;letter-spacing:-.02em}
+section p{margin:0 0 14px;font-size:15.5px;line-height:1.65;color:var(--muted)}
+section a{color:var(--text);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.25)}
+section a:hover{border-bottom-color:var(--blue)}
+
+footer{
+  margin-top:clamp(52px,8vh,84px);padding:26px 0 40px;border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-size:13px;color:var(--faint);
+}
+footer a{color:var(--muted);text-decoration:none;transition:color .16s ease}
+footer a:hover{color:var(--text)}
+
+@media (max-width:720px){
+  .grid{background-size:56px 56px}
+  .nav-note{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true"></div>
+<div class="grid" aria-hidden="true"></div>
+
+<div class="wrap">
+  <header>
+    <nav class="nav">
+      <a class="brand" href="/" aria-label="Point — home">
+        <svg viewBox="0 0 66 76.05" aria-hidden="true"><g fill="#fff" transform="translate(-24 -14.95)"><path d="M 24.14 18.79 L 24.14 18.79 A 3.02 3.02 0 0 1 28.72 15.48 L 71.10 43.73 L 71.10 43.73 A 6.01 6.01 0 0 1 70.85 53.89 L 47.15 68.11 L 47.15 68.11 A 7.21 7.21 0 0 1 36.49 63.84 L 24.14 18.79 Z"/><path d="M 66.00 79.00 a 12.00 12.00 0 1 1 24.00 0 a 12.00 12.00 0 1 1 -24.00 0 Z"/></g></svg>
+        <span>Point</span>
+      </a>
+      <div class="nav-note"><i class="dot" aria-hidden="true"></i> Private beta — macOS</div>
+    </nav>
+  </header>
+
+  <main>
+    <p class="eyebrow">Privacy</p>
+    <h1>What it reads,<br><span class="grad">and what it never does.</span></h1>
+    <p class="lede">Point AI reads what is under your cursor when you press a shortcut, sends that text to the AI provider you chose, and shows you the answer. It has no account, no server of its own, and no analytics. Nothing is sent unless you press a key.</p>
+    <p class="updated">Last updated 25 August 2026</p>
+
+    <section>
+      <h2>What is read, and when</h2>
+      <p>Point AI reads the screen only in the moment you press one of its shortcuts. There is no background monitoring, no hover activation and no polling — the app is idle until a key is pressed, and idle again as soon as the answer is on screen.</p>
+      <p>What it reads is the text at the cursor: first through macOS Accessibility, which asks the application itself for the text, and if that returns nothing, through local OCR of a small region around the pointer. OCR runs on your Mac using Apple&#x27;s Vision framework. No image is uploaded for it.</p>
+    </section>
+
+    <section>
+      <h2>What is sent, and to whom</h2>
+      <p>The captured text and your instruction are sent to the AI provider you selected in Settings, using your own API key. Point AI has no server in the middle: the request goes from your Mac to that provider directly.</p>
+      <p>Which provider that is, is your choice, and it is the choice that decides what happens to the text. Settings shows each provider&#x27;s data-retention policy in its own words next to its name. If you select Ollama, the model runs on your Mac and nothing leaves it at all.</p>
+      <p>Screenshots are not sent unless you turn on &quot;Send screenshots to the AI provider&quot;, which is off by default. With it on, a 600×400 image around your cursor is attached to the request. It is never written to disk.</p>
+    </section>
+
+    <section>
+      <h2>What is never read</h2>
+      <p>Secure text fields — password boxes — are never read. macOS marks them, and Point AI refuses to capture them and shows a blocked badge instead.</p>
+      <p>Password managers and messaging applications are excluded entirely: the shortcut does nothing while they are frontmost.</p>
+      <p>Email addresses, card numbers and API-key-shaped strings are stripped from the captured text before the request is built, so they are not sent even when they were on screen.</p>
+    </section>
+
+    <section>
+      <h2>What is stored on your Mac</h2>
+      <p>Your settings — the chosen provider, model, language, shortcuts — are stored in macOS preferences. Your API keys are stored in the macOS Keychain, never in preferences and never in a log.</p>
+      <p>The request log is off in this build. If support asks you to turn it on, Settings → Debug does that, and it then writes each prompt and response to a file inside the app&#x27;s own folder so you can send it. That file contains the screen text that was captured, which is why it is off unless you switch it on, and why you should switch it off again afterwards. It never leaves your Mac unless you send it.</p>
+    </section>
+
+    <section>
+      <h2>What is saved elsewhere, if you ask</h2>
+      <p>The save shortcut writes to Notion or Apple Notes — whichever you configured — and only the item you pointed at. Apple Notes is local to your Mac. Notion is your own workspace, reached with your own integration token, which is stored in the Keychain.</p>
+    </section>
+
+    <section>
+      <h2>What we collect</h2>
+      <p>Nothing. Point AI has no accounts, no telemetry, no crash reporting and no analytics. The app makes no network request except to the AI provider you chose, to the save destination you configured, and — when you click &quot;Check for Updates…&quot; — to pointai.dev to ask what the current version is. That request sends your version number and nothing else.</p>
+      <p>If you joined the beta or the waitlist, we have the email address you gave us, held at beehiiv and used to send you builds and release notes. Every email has an unsubscribe link, and asking us to delete the address deletes it.</p>
+    </section>
+
+    <section>
+      <h2>This is a beta</h2>
+      <p>This build is unreleased software given to a small group of testers. It is not notarized by Apple yet, which is why macOS warns about it on first launch. Please do not point it at anything confidential, and tell us if it does something you did not expect.</p>
+    </section>
+
+    <section>
+      <h2>Contact</h2>
+      <p><a href="mailto:hello@pointai.dev">hello@pointai.dev</a> — for questions, for a copy of what we hold, or to have it deleted.</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>© 2026 Point</span>
+    <span><a href="/versions">Beta builds</a> · <a href="mailto:hello@pointai.dev">hello@pointai.dev</a></span>
+  </footer>
+</div>
+
+</body>
+</html>
